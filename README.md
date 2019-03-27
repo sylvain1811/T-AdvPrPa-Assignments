@@ -1,3 +1,3 @@
 # T-AdvPrPa-Assignments
 
-Assignments far Advanced programming paradigm course
+Assignments for Advanced programming paradigms course

@@ -21,9 +21,9 @@ for ((x, i) <- xs zip xs.indices;
 
 val l = List(1, 2, 3, 4)
 
-def concat(b: String, a: Int) = b + "-" + a
+def concat(b: Any, a: Int) = b + "-" + a
 
-l.foldLeft("")(concat)
+l.reduceLeft(concat)
 
 def toUpper(s: String): String = {
     @tailrec
@@ -41,24 +41,15 @@ def toUpper(s: String): String = {
 toUpper("test")
 
 def balanceMatch(chars: List[Char]): Boolean = {
-    def check(c: Char): Int = {
-        c match {
-            case '(' => 1
-            case ')' => -1
-            case _ => 0
-        }
+
+    def rec(chars: List[Char], cpt: Int): Boolean = chars match {
+        case Nil => cpt == 0
+        case ')' :: rest => if (cpt > 0) rec(rest, cpt - 1) else false
+        case '(' :: rest => rec(rest, cpt + 1)
+        case _ :: rest => rec(rest, cpt)
     }
 
-    @tailrec
-    def rec(cpt: Int, rest: List[Char]): Int = {
-        rest match {
-            case Nil => cpt
-            case e :: Nil => cpt + check(e)
-            case e :: r => rec(cpt + check(e), r)
-        }
-    }
-
-    rec(0, chars) == 0
+    rec(chars, 0)
 }
 
 balanceMatch("(())".toList)
@@ -89,14 +80,28 @@ check(c2)
 
 
 def getItems(customers: List[Customer]) = {
-
-    val items=for (c <- customers;
-        item <- c.orders)
-        yield item
-
-    items.foldLeft(List[Int]())((l:List[Int], o:Item)=>{
-
-    })
+    customers.flatMap(c => c.orders)
+        .groupBy(_.name)
+        .map(t => (t._1, t._2.length))
 }
 
 println(getItems(List(c1, c2, c3)))
+
+// Streams
+val primes: Stream[Int] = List(2, 3, 5, 7).toStream
+
+def factors(n: Int): Stream[Int] = {
+
+    def rec(in: Stream[Int], out: Stream[Int], n: Int): Stream[Int] = in match {
+        case _ if n == 1 => out
+        case e #:: rest => if (n % e == 0) rec(in, e #:: out, n / e) else rec(rest, out, n)
+    }
+
+    rec(primes, Stream(), n)
+}
+factors(90).print
+
+val s: Stream[Int] = Stream(1, 2, 3, 4, 5, 6, 7, 8, 9)
+println(s.par.map((e: Int) => e * e).seq)
+
+List(1, 2, 3, 4).par.foreach(e => println(e))
